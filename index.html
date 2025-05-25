@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Kalp Animasyonu</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    // Senin tüm JavaScript kodların buraya geliyor:
+    
+    class Vector {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+      }
+      add(v) { return new Vector(this.x + v.x, this.y + v.y); }
+      subtract(v) { return new Vector(this.x - v.x, this.y - v.y); }
+      scale(s) { return new Vector(this.x * s, this.y * s); }
+    }
+
+    let canvas = document.getElementById("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let ctx = canvas.getContext("2d");
+
+    let origin = new Vector(canvas.width / 2, canvas.height / 2);
+
+    let polar = (rad) => {
+      let x = 16 * Math.sin(rad) ** 3;
+      let y =
+        13 * Math.cos(rad) -
+        5 * Math.cos(2 * rad) -
+        2 * Math.cos(3 * rad) -
+        Math.cos(4 * rad);
+      let scale = 15;
+      return new Vector(x * scale, -y * scale).add(origin);
+    };
+
+    let time = 0;
+    let points = [];
+
+    class Petal {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = -20;
+        this.size = 5 + Math.random() * 5;
+        this.speed = 1 + Math.random() * 2;
+        this.angle = Math.random() * 2 * Math.PI;
+        this.angularSpeed = 0.02 + Math.random() * 0.04;
+      }
+      update() {
+        this.y += this.speed;
+        this.angle += this.angularSpeed;
+        if (this.y > canvas.height + this.size) {
+          this.y = -this.size;
+          this.x = Math.random() * canvas.width;
+        }
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = 'rgba(255, 0, 50, 0.8)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.size, this.size / 2, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    let petals = [];
+    for(let i=0; i<50; i++) {
+      petals.push(new Petal());
+    }
+
+    const plushEmoji = '🐻';
+    function drawPlush() {
+      ctx.font = "50px serif";
+      ctx.textAlign = "center";
+      ctx.fillText(plushEmoji, origin.x, origin.y - 50);
+    }
+
+    function animate() {
+      time += 0.05;
+      let p = polar(time);
+      points.push(p);
+
+      if(points.length > 500) points.shift();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      petals.forEach(petal => {
+        petal.update();
+        petal.draw();
+      });
+
+      ctx.beginPath();
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 2;
+      ctx.moveTo(points[0].x, points[0].y);
+      for(let i=1; i<points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.fillStyle = "red";
+      ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      drawPlush();
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
